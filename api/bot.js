@@ -37,14 +37,12 @@ const LANGUAGE_CONFIGS = {
 };
 
 // تخزين مؤقت للإعدادات في الذاكرة
-// ملاحظة: هذا التخزين مؤقت وسيتم فقدانه عند إعادة تشغيل السيرفر
 let userSettings = {};
 
 // جلب إعدادات المستخدم من الذاكرة
 async function getUserSettings(userId) {
     const userIdStr = userId.toString();
     
-    // إذا لم توجد إعدادات، استخدم الإعدادات الافتراضية
     if (!userSettings[userIdStr]) {
         userSettings[userIdStr] = {
             messageType: 'text_and_voice',
@@ -64,9 +62,7 @@ async function saveUserSettings(userId, settings) {
         lastUpdated: Date.now()
     };
     
-    // حفظ في الذاكرة
     userSettings[userIdStr] = updatedSettings;
-    
     console.log(`Settings saved in memory for user ${userId}`);
     return updatedSettings;
 }
@@ -121,16 +117,13 @@ async function generateTTS(text, language = 'ar') {
         const langConfig = LANGUAGE_CONFIGS[language] || LANGUAGE_CONFIGS['ar'];
         const ttsLang = langConfig.ttsLang;
         
-        // تنظيف النص
         const cleanText = text
             .replace(/[\[\]\(\)\{\}\*\#\>\<\`]/g, '')
             .replace(/\n+/g, '. ')
             .trim();
         
-        // ترميز النص للرابط (الحد الأقصى 200 حرف)
         const encodedText = encodeURIComponent(cleanText.substring(0, 200));
         
-        // رابط Google Translate TTS
         const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${ttsLang}&q=${encodedText}`;
         
         console.log('جاري جلب الصوت من Google...');
@@ -148,7 +141,6 @@ async function generateTTS(text, language = 'ar') {
         
         const audioBuffer = await response.arrayBuffer();
         
-        // التحويل إلى base64
         const bytes = new Uint8Array(audioBuffer);
         let binary = '';
         for (let i = 0; i < bytes.byteLength; i++) {
@@ -204,7 +196,6 @@ async function sendTelegramMessage(chatId, text, replyMarkup = null) {
 
 async function sendTelegramVoice(chatId, audioBase64, caption = '') {
     try {
-        // التحويل من base64 إلى binary
         const binaryString = atob(audioBase64);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
@@ -386,7 +377,6 @@ async function handleCommand(command, message) {
                 + `👥 عدد المستخدمين: ${usersCount}\n`
                 + `🌐 اللغات المستخدمة:\n`;
             
-            // حساب عدد المستخدمين لكل لغة
             const languageStats = {};
             Object.values(userSettings).forEach(settings => {
                 const lang = settings.language;
@@ -415,38 +405,31 @@ async function handleMessage(message) {
     
     console.log(`رسالة من ${userName} (${userId}): ${userText.substring(0, 50)}...`);
     
-    // إشعار الأدمن برسالة المستخدم
     if (userText && userId !== ADMIN_ID) {
         await notifyAdmin(userId, userName, userText);
     }
     
-    // معالجة الأوامر
     if (userText.startsWith('/')) {
         await handleCommand(userText.split(' ')[0].toLowerCase(), message);
         return;
     }
     
-    // معالجة الرسالة العادية
     try {
         const settings = await getUserSettings(userId);
         console.log(`إعدادات المستخدم ${userId}:`, settings);
         
-        // إرسال حالة الكتابة
         await sendChatAction(chatId, 'typing');
         
-        // الحصول على رد الذكاء الاصطناعي
         console.log('جاري استدعاء OpenRouter API...');
         const aiResponse = await callOpenRouter(userText, settings.language);
         console.log('تم استلام رد الذكاء الاصطناعي:', aiResponse.substring(0, 100));
         
-        // إرسال الرد بناءً على الإعدادات
         if (settings.messageType === 'text_only' || settings.messageType === 'text_and_voice') {
             const keyboard = await getMainMenuKeyboard(userId);
             await sendTelegramMessage(chatId, aiResponse, keyboard);
         }
         
         if (settings.messageType === 'voice_only' || settings.messageType === 'text_and_voice') {
-            // توليد الصوت
             console.log('جاري توليد الصوت...');
             await sendChatAction(chatId, 'upload_voice');
             
@@ -565,15 +548,25 @@ async function handleCallbackQuery(callbackQuery) {
     }
 }
 
+// إعداد CORS headers يدوياً
+function setCorsHeaders(response) {
+    response.setHeader('Access-Control-Allow-Origin', '*');
+    response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization');
+    response.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
+    return response;
+}
+
 // الدالة الرئيسية لمعالجة الطلبات في Vercel
 export default async function handler(request, response) {
-    // دعم طلبات CORS
+    // معالجة طلب OPTIONS لـ CORS
     if (request.method === 'OPTIONS') {
-        response.setHeader('Access-Control-Allow-Origin', '*');
-        response.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-        response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        setCorsHeaders(response);
         return response.status(200).end();
     }
+    
+    // تعيين CORS headers لجميع الردود
+    setCorsHeaders(response);
     
     if (request.method === 'POST') {
         try {
