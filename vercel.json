@@ -8,27 +8,24 @@
   ],
   "routes": [
     {
-      "src": "/(.*)",
-      "dest": "/api/bot"
-    }
-  ],
-  "headers": [
+      "src": "/api/bot",
+      "dest": "/api/bot",
+      "methods": ["GET", "POST", "OPTIONS"],
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Authorization"
+      }
+    },
     {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "X-Requested-With, Content-Type, Authorization"
-        }
-      ]
+      "src": "/(.*)",
+      "dest": "/api/bot",
+      "methods": ["GET", "POST", "OPTIONS"],
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Authorization"
+      }
     }
   ]
 }
