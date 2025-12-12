@@ -1,0 +1,23 @@
+{
+  "name": "telegram-ai-bot-vercel",
+  "version": "1.0.0",
+  "description": "Telegram AI Bot with TTS on Vercel - بدون استخدام .env",
+  "main": "api/bot.js",
+  "scripts": {
+    "start": "node api/bot.js",
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.61.0"
+  },
+  "devDependencies": {
+    "vercel": "^34.0.0"
+  },
+  "engines": {
+    "node": ">=18.x"
+  },
+  "keywords": ["telegram", "ai", "bot", "vercel"],
+  "author": "",
+  "license": "MIT"
+}
