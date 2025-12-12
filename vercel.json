@@ -6,14 +6,13 @@
       "use": "@vercel/node"
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/bot",
-      "destination": "/api/bot"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/api/bot"
+      "src": "/(.*)",
+      "dest": "/api/bot.js"
     }
-  ]
+  ],
+  "env": {
+    "TELEGRAM_TOKEN": "8278368892:AAGc4iA0wql9MpHVUwkw8toPqzhLrCKE7sw"
+  }
 }
